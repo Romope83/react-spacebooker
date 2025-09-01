@@ -320,7 +320,6 @@ const SpaceFormModal = ({ isOpen, onClose, onSave, space }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={space ? "Editar Espaço" : "Adicionar Novo Espaço"}>
       <form onSubmit={handleSubmit}>
-        {/* ...campos do formulário... */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">Nome</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3" required />
@@ -342,7 +341,149 @@ const SpaceFormModal = ({ isOpen, onClose, onSave, space }) => {
   );
 }
 
-const UserDashboard = () => { /* ... Em breve ... */ return <div className="p-8"><h1 className="text-3xl font-bold">Painel do Usuário (Em breve)</h1></div> };
+const UserDashboard = () => {
+  const { user } = useAuth();
+  const [spaces, setSpaces] = useState([]);
+  const [myReservations, setMyReservations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSpace, setSelectedSpace] = useState(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const { data: spacesData } = await supabase.from('spaces').select();
+    const { data: reservationsData } = await supabase.from('reservations').select().eq('user_id', user.id);
+    setSpaces(spacesData);
+    setMyReservations(reservationsData);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [user]);
+
+  const handleBookNow = (space) => {
+    setSelectedSpace(space);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmBooking = async (bookingDetails) => {
+    const newReservation = {
+      space_id: selectedSpace.id,
+      user_id: user.id,
+      user_email: user.email,
+      space_name: selectedSpace.name,
+      ...bookingDetails
+    };
+    await supabase.from('reservations').insert(newReservation);
+    setIsModalOpen(false);
+    fetchData(); // Recarrega os dados para mostrar a nova reserva
+  };
+
+  const handleCancelReservation = async (reservationId) => {
+    if (window.confirm('Tem certeza que deseja cancelar sua reserva?')) {
+      await supabase.from('reservations').delete().eq('id', reservationId);
+      fetchData(); // Recarrega os dados para remover a reserva cancelada
+    }
+  };
+
+  if (loading) return <PageSpinner />;
+  
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold mb-6">Painel do Usuário</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Espaços Disponíveis */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-semibold mb-4">Espaços Disponíveis</h2>
+           <ul className="space-y-3">
+            {spaces.map(space => (
+              <li key={space.id} className="border p-4 rounded-lg flex justify-between items-center">
+                <div>
+                  <p className="font-bold">{space.name}</p>
+                  <p className="text-sm text-gray-600">Capacidade: {space.capacity}</p>
+                  <p className="text-sm text-gray-600">Recursos: {space.resources}</p>
+                </div>
+                <button onClick={() => handleBookNow(space)} className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">Reservar</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Minhas Reservas */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-semibold mb-4">Minhas Reservas</h2>
+          {myReservations.length > 0 ? (
+            <ul className="space-y-3">
+              {myReservations.map(res => (
+                <li key={res.id} className="border p-4 rounded-lg flex justify-between items-center">
+                  <div>
+                    <p className="font-bold">{res.space_name}</p>
+                    <p className="text-sm text-gray-600">Data: {res.date} | Horário: {res.start_time} - {res.end_time}</p>
+                  </div>
+                  <button onClick={() => handleCancelReservation(res.id)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">Cancelar</button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500">Você ainda não fez nenhuma reserva.</p>
+          )}
+        </div>
+      </div>
+      <ReservationFormModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleConfirmBooking}
+        space={selectedSpace}
+      />
+    </div>
+  );
+};
+
+const ReservationFormModal = ({ isOpen, onClose, onSave, space }) => {
+  const [date, setDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  
+  useEffect(() => {
+      // Gera uma data padrão para o dia seguinte para facilitar testes
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setDate(tomorrow.toISOString().split('T')[0]);
+      setStartTime('09:00');
+      setEndTime('10:00');
+  }, [isOpen]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({ date, start_time: startTime, end_time: endTime });
+  };
+
+  if (!space) return null;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={`Reservar: ${space.name}`}>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Data</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3" required />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Hora de Início</label>
+          <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3" required />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Hora de Fim</label>
+          <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3" required />
+        </div>
+        <div className="flex justify-end gap-4 mt-6">
+          <button type="button" onClick={onClose} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">Cancelar</button>
+          <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Confirmar Reserva</button>
+        </div>
+      </form>
+    </Modal>
+  )
+};
 
 const AppLayout = ({ children }) => {
   const { user, logout } = useAuth();
