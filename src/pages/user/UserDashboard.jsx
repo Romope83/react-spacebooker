@@ -117,6 +117,7 @@ export default function UserDashboard() {
         onClose={() => setIsModalOpen(false)} 
         onSave={handleConfirmBooking}
         space={selectedSpace}
+        allReservations={allReservations}
       />
     </div>
   );

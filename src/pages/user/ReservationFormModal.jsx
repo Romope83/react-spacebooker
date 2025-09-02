@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../../components/Modal.jsx';
 
 // Este componente é o formulário que aparece dentro do Modal para o utilizador fazer uma reserva.
-export default function ReservationFormModal({ isOpen, onClose, onSave, space }) {
+export default function ReservationFormModal({ isOpen, onClose, onSave, space, allReservations }) { // Recebe todas as reservas
   // Estados para controlar os campos do formulário
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -21,7 +21,33 @@ export default function ReservationFormModal({ isOpen, onClose, onSave, space })
   // Função chamada quando o formulário é submetido
   const handleSubmit = (e) => {
     e.preventDefault(); // Previne o recarregamento da página
-    // Chama a função onSave, passando os detalhes da reserva para o componente pai (UserDashboard)
+
+    // --- LÓGICA DE VERIFICAÇÃO DE CONFLITO ---
+    // Verifica se já existe uma reserva que se sobrepõe ao horário solicitado.
+    const hasConflict = allReservations.some(reservation => {
+      // Verifica se a reserva existente é para o mesmo espaço e na mesma data
+      if (reservation.space_id === space.id && reservation.date === date) {
+        // Converte os horários para facilitar a comparação
+        const existingStart = reservation.start_time;
+        const existingEnd = reservation.end_time;
+        const newStart = startTime;
+        const newEnd = endTime;
+
+        // A sobreposição ocorre se a nova reserva começa antes do fim da existente
+        // E a reserva existente começa antes do fim da nova.
+        if (newStart < existingEnd && existingStart < newEnd) {
+          return true; // Encontrou um conflito
+        }
+      }
+      return false; // Nenhum conflito encontrado para esta reserva
+    });
+
+    if (hasConflict) {
+      alert('Erro: Já existe uma reserva para este espaço neste horário. Por favor, escolha outro horário.');
+      return; // Interrompe o processo de reserva
+    }
+
+    // Se não houver conflito, chama a função onSave.
     onSave({ date, start_time: startTime, end_time: endTime });
   };
 
