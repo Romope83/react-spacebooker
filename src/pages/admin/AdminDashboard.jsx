@@ -1,101 +1,137 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Linha corrigida
 import { supabase } from '../../api/supabaseClient';
 import { PageSpinner } from '../../components/Spinner';
-import { PlusIcon, PencilIcon, TrashIcon } from '../../components/Icons';
 import CalendarView from '../../components/CalendarView';
-import SpaceFormModal from './SpaceFormModal';
+import { PlusIcon, TrashIcon } from '../../components/Icons';
 
+// --- Componente do Formulário ---
+function CreateSpaceForm({ onSpaceCreated }) {
+  const [name, setName] = useState('');
+  const [capacity, setCapacity] = useState('');
+  const [resources, setResources] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('spaces')
+        .insert([{ name, capacity: parseInt(capacity), resources }]);
+      
+      if (error) throw error;
+
+      alert('Espaço criado com sucesso!');
+      setName('');
+      setCapacity('');
+      setResources('');
+      onSpaceCreated();
+    } catch (error) {
+      alert(`Erro ao criar espaço: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow">
+      <h2 className="text-xl font-semibold mb-4 flex items-center text-gray-800"><PlusIcon /> Adicionar Novo Espaço</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-bold text-gray-700">Nome do Espaço</label>
+          <input type="text" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+        </div>
+        <div>
+          <label className="block text-sm font-bold text-gray-700">Capacidade</label>
+          <input type="number" value={capacity} onChange={e => setCapacity(e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+        </div>
+        <div>
+          <label className="block text-sm font-bold text-gray-700">Recursos (ex: Projetor, Wi-Fi)</label>
+          <input type="text" value={resources} onChange={e => setResources(e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+        </div>
+        <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors">
+          {loading ? 'Salvando...' : 'Salvar Espaço'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// --- Componente Principal do Painel ---
 export default function AdminDashboard() {
-  const [spaces, setSpaces] = useState([]);
-  const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentSpace, setCurrentSpace] = useState(null);
+  const [spaces, setSpaces] = useState([]);
+  const [allReservations, setAllReservations] = useState([]);
 
   const fetchData = async () => {
     setLoading(true);
-    const { data: spacesData } = await supabase.from('spaces').select();
-    const { data: reservationsData } = await supabase.from('reservations').select();
-    setSpaces(spacesData);
-    setReservations(reservationsData);
-    setLoading(false);
+    try {
+      const { data: spacesData, error: spacesError } = await supabase.from('spaces').select('*').order('created_at', { ascending: false });
+      if (spacesError) throw spacesError;
+      setSpaces(spacesData || []);
+
+      const { data: reservationsData, error: reservationsError } = await supabase.from('reservations').select('*');
+      if (reservationsError) throw reservationsError;
+      setAllReservations(reservationsData || []);
+
+    } catch (error) {
+      alert(`Erro ao buscar dados do painel: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchData();
   }, []);
-
-  const handleEdit = (space) => { setCurrentSpace(space); setIsModalOpen(true); };
-  const handleAddNew = () => { setCurrentSpace(null); setIsModalOpen(true); };
-
+  
   const handleDelete = async (spaceId) => {
     if (window.confirm('Tem certeza que deseja apagar este espaço?')) {
-      await supabase.from('spaces').delete().eq('id', spaceId);
-      fetchData();
-    }
-  };
-  
-  const handleCancelReservation = async (reservationId) => {
-     if (window.confirm('Tem certeza que deseja cancelar esta reserva?')) {
-      await supabase.from('reservations').delete().eq('id', reservationId);
-      fetchData();
+        try {
+            const { error } = await supabase.from('spaces').delete().eq('id', spaceId);
+            if (error) throw error;
+            alert('Espaço apagado com sucesso!');
+            fetchData();
+        } catch(error) {
+            alert(`Erro ao apagar espaço: ${error.message}`)
+        }
     }
   }
 
-  const handleSave = async (spaceData) => {
-    if (currentSpace) {
-      await supabase.from('spaces').update(spaceData).eq('id', currentSpace.id);
-    } else {
-      await supabase.from('spaces').insert(spaceData);
-    }
-    fetchData();
-    setIsModalOpen(false);
-  };
-  
-  if (loading) return <PageSpinner />;
+  if (loading) {
+    return <PageSpinner />;
+  }
 
   return (
-    <div className="p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Painel do Administrador</h1>
-      <CalendarView reservations={reservations} />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">Espaços</h2>
-            <button onClick={handleAddNew} className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-indigo-700"><PlusIcon /> Adicionar</button>
-          </div>
-          <ul className="space-y-3">
-            {spaces.map(space => (
-              <li key={space.id} className="border p-4 rounded-lg flex justify-between items-center">
-                <div>
-                  <p className="font-bold">{space.name}</p>
-                  <p className="text-sm text-gray-600">Capacidade: {space.capacity} | Recursos: {space.resources}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleEdit(space)} className="p-2 text-blue-600 hover:text-blue-800"><PencilIcon /></button>
-                  <button onClick={() => handleDelete(space.id)} className="p-2 text-red-600 hover:text-red-800"><TrashIcon /></button>
-                </div>
-              </li>
-            ))}
-          </ul>
+    <div className="p-4 md:p-8 space-y-8">
+      <h1 className="text-3xl font-bold text-gray-900">Painel do Administrador</h1>
+              <div className="lg:col-span-2">
+          <CalendarView reservations={allReservations} />
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-semibold mb-4">Todas as Reservas</h2>
-          <ul className="space-y-3">
-             {reservations.map(res => (
-              <li key={res.id} className="border p-4 rounded-lg flex justify-between items-center">
-                 <div>
-                  <p className="font-bold">{res.space_name}</p>
-                  <p className="text-sm text-gray-600">Usuário: {res.user_email}</p>
-                  <p className="text-sm text-gray-600">Data: {res.date} | Horário: {res.start_time} - {res.end_time}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div className="lg:col-span-1 space-y-8">
+          <CreateSpaceForm onSpaceCreated={fetchData} />
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Espaços Cadastrados</h2>
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+              {spaces.length > 0 ? spaces.map(space => (
+                <div key={space.id} className="border p-4 rounded-lg flex justify-between items-center transition-shadow hover:shadow-md">
+                  <div>
+                    <p className="font-bold text-gray-800">{space.name}</p>
+                    <p className="text-sm text-gray-600">Capacidade: {space.capacity}</p>
+                    <p className="text-sm text-gray-600">Recursos: {space.resources}</p>
+                  </div>
+                  <button onClick={() => handleDelete(space.id)} className="text-gray-400 hover:text-red-500 p-2 rounded-full transition-colors"><TrashIcon /></button>
                 </div>
-                <button onClick={() => handleCancelReservation(res.id)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">Cancelar</button>
-              </li>
-            ))}
-          </ul>
+              )) : (
+                <p className="text-gray-500">Nenhum espaço cadastrado ainda.</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-       <SpaceFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} space={currentSpace} />
     </div>
   );
-};
+}

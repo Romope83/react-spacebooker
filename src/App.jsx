@@ -1,47 +1,65 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
 import LoginPage from './pages/LoginPage.jsx';
+import SignUpPage from './pages/SignUpPage.jsx'; // Importe a nova página
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import UserDashboard from './pages/user/UserDashboard.jsx';
 import AppLayout from './components/AppLayout.jsx';
 import { PageSpinner } from './components/Spinner.jsx';
 
-// O componente Main usa o contexto de autenticação para decidir qual página mostrar.
-const Main = () => {
+// Componente para proteger rotas que exigem autenticação
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <PageSpinner />;
+  }
+
+  if (!user) {
+    // Se não estiver logado, redireciona para a página de login
+    return <Navigate to="/login" replace />;
+  }
+
+  // Se estiver logado, mostra o conteúdo da rota protegida
+  return children;
+}
+
+// O componente principal agora gerencia as rotas
+function AppContent() {
     const { user, role, loading } = useAuth();
     
-    // Mostra um spinner de carregamento enquanto a autenticação está a ser verificada.
     if (loading) {
         return <PageSpinner />;
     }
 
-    // Se não houver utilizador logado, mostra a página de login.
-    if (!user) {
-        return <LoginPage />;
-    }
+    return (
+        <Routes>
+            {/* Rotas Públicas */}
+            <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />
+            <Route path="/signup" element={user ? <Navigate to="/" /> : <SignUpPage />} />
 
-    // Com base no papel ('role') do utilizador, decide qual painel mostrar.
-    let dashboardComponent;
-    if (role === 'admin') {
-        dashboardComponent = <AdminDashboard />;
-    } else if (role === 'user') {
-        dashboardComponent = <UserDashboard />;
-    } else {
-        // Mostra uma mensagem de fallback se o papel não for reconhecido.
-        dashboardComponent = <div>Papel de usuário desconhecido.</div>;
-    }
-
-    // Envolve o painel escolhido com o layout principal da aplicação (cabeçalho, etc.).
-    return <AppLayout>{dashboardComponent}</AppLayout>;
+            {/* Rota Raiz e Protegida */}
+            <Route 
+                path="/*"
+                element={
+                    <ProtectedRoute>
+                        <AppLayout>
+                            {role === 'admin' ? <AdminDashboard /> : <UserDashboard />}
+                        </AppLayout>
+                    </ProtectedRoute>
+                } 
+            />
+        </Routes>
+    );
 }
 
-// O componente App é o topo da nossa árvore de componentes.
-// A sua única função é fornecer o AuthProvider para toda a aplicação.
+// O App raiz continua o mesmo
 export default function App() {
   return (
     <AuthProvider>
-      <Main />
+      <AppContent />
     </AuthProvider>
   );
 }
-
