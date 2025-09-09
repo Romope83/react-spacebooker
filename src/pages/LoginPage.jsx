@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-      <div className="max-w-md w-full bg-white p-10 rounded-xl shadow-lg border border-slate-200">
+      <div className="max-w-md w-full bg-white p-10 rounded-xl shadow-lg border border-slate-200 animate-fade-in-up"> {/* Adicionada animação */}
         <div className="text-center mb-8">
             <h1 className="text-4xl font-bold tracking-tight text-indigo-600">SpaceBooker</h1>
             <p className="text-slate-500 mt-2">Gestão de Reservas para Espaços Compartilhados</p>
@@ -29,7 +29,7 @@ export default function LoginPage() {
               type="email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              className="appearance-none border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" 
+              className="appearance-none border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
               required 
             />
           </div>
@@ -40,7 +40,7 @@ export default function LoginPage() {
               type="password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
-              className="appearance-none border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" 
+              className="appearance-none border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
               required 
             />
           </div>
@@ -48,7 +48,7 @@ export default function LoginPage() {
             <button 
               type="submit" 
               disabled={loading} 
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline w-full flex justify-center items-center disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline w-full flex justify-center items-center disabled:bg-indigo-400 disabled:cursor-not-allowed transition-all duration-200 active:scale-98" // Adicionado active:scale-98
             >
               {loading ? <Spinner /> : 'Entrar'}
             </button>
@@ -58,7 +58,7 @@ export default function LoginPage() {
         <div className="mt-6 text-center text-sm text-slate-600 border-t border-slate-200 pt-6">
             <p>
                 Não tem uma conta?{' '}
-                <Link to="/signup" className="font-semibold text-indigo-600 hover:text-indigo-500 hover:underline">
+                <Link to="/signup" className="font-semibold text-indigo-600 hover:text-indigo-500 hover:underline transition-colors">
                     Cadastre-se
                 </Link>
             </p>

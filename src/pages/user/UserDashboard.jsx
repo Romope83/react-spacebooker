@@ -4,7 +4,20 @@ import { supabase } from '../../api/supabaseClient.js';
 import CalendarView from '../../components/CalendarView.jsx';
 import { PageSpinner } from '../../components/Spinner.jsx';
 import ReservationFormModal from './ReservationFormModal.jsx';
-import { PencilIcon } from '../../components/Icons.jsx';
+import { PencilIcon, CalendarDaysIcon } from '../../components/Icons.jsx'; // Trocar para um ícone mais adequado
+
+// Você precisará adicionar este ícone em Icons.jsx
+// export function CalendarDaysIcon() { return <svg>...</svg>; }
+// Ou usar um que já exista
+const EmptyReservationsState = () => (
+    <div className="text-center py-10 px-4 flex flex-col items-center">
+        {/* Usando um ícone existente como placeholder */}
+        <CalendarIcon />
+        <h3 className="mt-4 text-lg font-semibold text-slate-800">Nenhuma Reserva</h3>
+        <p className="mt-1 text-sm text-slate-500">Você ainda não tem reservas. Escolha um espaço e agende seu horário!</p>
+    </div>
+);
+
 
 export default function UserDashboard() {
   const { user } = useAuth();
@@ -17,6 +30,7 @@ export default function UserDashboard() {
   const [selectedSpace, setSelectedSpace] = useState(null);
   const [reservationToEdit, setReservationToEdit] = useState(null);
 
+  // ... (lógica de fetchData, handleSave, etc. permanece a mesma)
   const fetchData = async () => {
     try {
       const { data: spacesData, error: spacesError } = await supabase.from('spaces').select();
@@ -83,45 +97,45 @@ export default function UserDashboard() {
   if (loading) return <PageSpinner />;
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in-up">
       <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">Painel do Usuário</h1>
       <CalendarView reservations={allReservations} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
           <h2 className="text-2xl font-bold mb-4 text-slate-800">Espaços para Reservar</h2>
            <div className="divide-y divide-slate-100">
             {spaces.map((space, index) => (
-              <div key={space.id} className={`py-4 flex justify-between items-center ${index === 0 ? 'pt-0' : ''}`}>
+              <div key={space.id} className={`py-4 flex justify-between items-center group ${index === 0 ? 'pt-0' : ''}`}>
                 <div>
                   <p className="font-bold text-slate-800">{space.name}</p>
                   <p className="text-sm text-slate-500">Capacidade: {space.capacity}</p>
                   <p className="text-sm text-slate-500">Recursos: {space.resources}</p>
                 </div>
-                <button onClick={() => handleBookNow(space)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-semibold transition-colors shrink-0">Reservar</button>
+                <button onClick={() => handleBookNow(space)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-semibold transition active:scale-95 shrink-0">Reservar</button>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-shadow">
           <h2 className="text-2xl font-bold mb-4 text-slate-800">Minhas Reservas</h2>
           {myReservations.length > 0 ? (
             <div className="divide-y divide-slate-100">
               {myReservations.map((res, index) => (
-                <div key={res.id} className={`py-4 flex justify-between items-center ${index === 0 ? 'pt-0' : ''}`}>
+                <div key={res.id} className={`py-4 flex justify-between items-center group ${index === 0 ? 'pt-0' : ''}`}>
                   <div>
                     <p className="font-bold">{res.space_name}</p>
                     <p className="text-sm text-slate-500">Data: {new Date(res.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})} | Horário: {res.start_time} - {res.end_time}</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => handleEdit(res)} title="Editar Reserva" className="bg-slate-200 text-slate-700 p-2 rounded-full hover:bg-slate-300 transition-colors"><PencilIcon /></button>
-                    <button onClick={() => handleCancelReservation(res.id)} className="bg-rose-500 text-white px-4 py-2 rounded-lg hover:bg-rose-600 text-sm font-semibold transition-colors">Cancelar</button>
+                    <button onClick={() => handleEdit(res)} title="Editar Reserva" className="bg-slate-200 text-slate-700 p-2 rounded-full hover:bg-slate-300 transition active:scale-95"><PencilIcon /></button>
+                    <button onClick={() => handleCancelReservation(res.id)} className="bg-rose-500 text-white px-4 py-2 rounded-lg hover:bg-rose-600 text-sm font-semibold transition active:scale-95">Cancelar</button>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-slate-500">Você ainda não fez nenhuma reserva.</p>
+            <EmptyReservationsState />
           )}
         </div>
       </div>
