@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react'; // Linha corrigida
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../api/supabaseClient';
 import { PageSpinner } from '../../components/Spinner';
 import CalendarView from '../../components/CalendarView';
+import ReservationFormModal from '../user/ReservationFormModal';
 import { PlusIcon, TrashIcon } from '../../components/Icons';
 
-// --- Componente do Formulário ---
+/**
+ * Componente de formulário para criar e gerenciar um novo espaço.
+ * Fica dentro do painel do admin para manter o código organizado.
+ */
 function CreateSpaceForm({ onSpaceCreated }) {
   const [name, setName] = useState('');
   const [capacity, setCapacity] = useState('');
@@ -22,6 +26,7 @@ function CreateSpaceForm({ onSpaceCreated }) {
       if (error) throw error;
 
       alert('Espaço criado com sucesso!');
+      // Limpa o formulário e avisa o componente pai para recarregar a lista
       setName('');
       setCapacity('');
       setResources('');
@@ -57,19 +62,26 @@ function CreateSpaceForm({ onSpaceCreated }) {
   );
 }
 
-// --- Componente Principal do Painel ---
+/**
+ * Componente principal do Painel do Administrador.
+ */
 export default function AdminDashboard() {
+  // States para controlar a UI e os dados
   const [loading, setLoading] = useState(true);
   const [spaces, setSpaces] = useState([]);
   const [allReservations, setAllReservations] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reservationToEdit, setReservationToEdit] = useState(null);
 
+  // Função única para buscar todos os dados necessários para o painel
   const fetchData = async () => {
-    setLoading(true);
     try {
+      // Busca os espaços
       const { data: spacesData, error: spacesError } = await supabase.from('spaces').select('*').order('created_at', { ascending: false });
       if (spacesError) throw spacesError;
       setSpaces(spacesData || []);
 
+      // Busca todas as reservas para o calendário
       const { data: reservationsData, error: reservationsError } = await supabase.from('reservations').select('*');
       if (reservationsError) throw reservationsError;
       setAllReservations(reservationsData || []);
@@ -81,35 +93,62 @@ export default function AdminDashboard() {
     }
   };
 
+  // Busca os dados quando o componente é montado
   useEffect(() => {
     fetchData();
   }, []);
   
-  const handleDelete = async (spaceId) => {
+  // Função para apagar um espaço
+  const handleDeleteSpace = async (spaceId) => {
     if (window.confirm('Tem certeza que deseja apagar este espaço?')) {
         try {
             const { error } = await supabase.from('spaces').delete().eq('id', spaceId);
             if (error) throw error;
             alert('Espaço apagado com sucesso!');
-            fetchData();
+            fetchData(); // Recarrega todos os dados
         } catch(error) {
             alert(`Erro ao apagar espaço: ${error.message}`)
         }
     }
   }
 
+  // Abre o modal de edição quando uma reserva no calendário é clicada
+  const handleReservationClick = (reservation) => {
+    setReservationToEdit(reservation);
+    setIsModalOpen(true);
+  }
+
+  // Função chamada pelo modal para salvar as alterações de uma reserva
+  const handleSaveReservation = async (bookingDetails) => {
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .update(bookingDetails)
+        .eq('id', reservationToEdit.id);
+      if (error) throw error;
+      
+      alert('Reserva atualizada com sucesso!');
+      setIsModalOpen(false);
+      fetchData(); // Recarrega os dados para atualizar o calendário
+    } catch (error) {
+      // Propaga o erro para o modal exibir o alerta
+      throw error;
+    }
+  };
+
+  // Exibe um spinner enquanto os dados iniciais são carregados
   if (loading) {
     return <PageSpinner />;
   }
 
+  // Renderiza o painel completo
   return (
     <div className="p-4 md:p-8 space-y-8">
       <h1 className="text-3xl font-bold text-gray-900">Painel do Administrador</h1>
-              <div className="lg:col-span-2">
-          <CalendarView reservations={allReservations} />
-        </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
+        {/* Coluna da Esquerda: Gerenciamento de Espaços */}
         <div className="lg:col-span-1 space-y-8">
           <CreateSpaceForm onSpaceCreated={fetchData} />
           
@@ -123,7 +162,7 @@ export default function AdminDashboard() {
                     <p className="text-sm text-gray-600">Capacidade: {space.capacity}</p>
                     <p className="text-sm text-gray-600">Recursos: {space.resources}</p>
                   </div>
-                  <button onClick={() => handleDelete(space.id)} className="text-gray-400 hover:text-red-500 p-2 rounded-full transition-colors"><TrashIcon /></button>
+                  <button onClick={() => handleDeleteSpace(space.id)} className="text-gray-400 hover:text-red-500 p-2 rounded-full transition-colors"><TrashIcon /></button>
                 </div>
               )) : (
                 <p className="text-gray-500">Nenhum espaço cadastrado ainda.</p>
@@ -131,7 +170,22 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Coluna da Direita: Calendário de Reservas */}
+        <div className="lg:col-span-2">
+          <CalendarView reservations={allReservations} onReservationClick={handleReservationClick} />
+        </div>
+
       </div>
+
+      {/* Modal de Edição de Reserva (reutilizado) */}
+      <ReservationFormModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleSaveReservation}
+        allReservations={allReservations}
+        existingReservation={reservationToEdit}
+      />
     </div>
   );
 }

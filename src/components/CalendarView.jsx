@@ -1,22 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
 
-export default function CalendarView({ reservations }) {
+// Adicionamos a prop 'onReservationClick' para que o admin possa clicar numa reserva
+export default function CalendarView({ reservations, onReservationClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // --- LÓGICA DE AGRUPAMENTO DE RESERVAS CORRIGIDA ---
   const reservationsByDate = useMemo(() => {
-    if (!reservations || reservations.length === 0) {
-      return {};
-    }
-
+    if (!reservations || reservations.length === 0) return {};
     return reservations.reduce((acc, res) => {
-      // VERIFICA SE A DATA EXISTE E É UMA STRING
       if (res.date && typeof res.date === 'string') {
-        // Pega apenas a parte da data (os primeiros 10 caracteres: 'AAAA-MM-DD')
-        // Isso ignora a hora e o fuso horário, evitando o bug.
         const dateKey = res.date.substring(0, 10);
-        
         (acc[dateKey] = acc[dateKey] || []).push(res);
       }
       return acc;
@@ -30,32 +23,37 @@ export default function CalendarView({ reservations }) {
   const renderCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
+    // ... (lógica de renderização dos dias)
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
 
     const days = [];
-    // Preenche os dias vazios no início do mês
     for (let i = 0; i < firstDay.getDay(); i++) {
-      days.push(<div key={`empty-start-${i}`} className="border rounded-md p-2 h-24 bg-gray-50"></div>);
+      days.push(<div key={`empty-start-${i}`} className="border rounded-md p-2 h-28 bg-gray-50"></div>);
     }
 
-    // Renderiza cada dia do mês
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const dayReservations = reservationsByDate[dateStr] || [];
       const hasReservations = dayReservations.length > 0;
       
       days.push(
-        <div key={day} className={`border rounded-md p-2 h-24 text-sm relative transition-colors ${hasReservations ? 'bg-blue-50' : 'bg-white'}`}>
+        <div key={day} className={`border rounded-md p-2 h-28 text-sm relative transition-colors ${hasReservations ? 'bg-blue-50' : 'bg-white'}`}>
           <span className="font-semibold text-gray-800">{day}</span>
           {hasReservations && (
-            <div className="mt-1 space-y-1">
-              {dayReservations.slice(0, 2).map(r => (
-                 <div key={r.id} className="bg-blue-200 text-blue-800 p-1 rounded text-xs truncate" title={`${r.space_name} (${r.start_time}-${r.end_time})`}>
-                    {r.space_name}
+            <div className="mt-1 space-y-1 overflow-y-auto max-h-20">
+              {dayReservations.map(r => (
+                 <div 
+                   key={r.id} 
+                   className={`bg-blue-200 text-blue-800 p-1 rounded text-xs truncate ${onReservationClick ? 'cursor-pointer hover:bg-blue-300' : ''}`} 
+                   title={`${r.space_name} (${r.start_time}-${r.end_time})`}
+                   onClick={() => onReservationClick && onReservationClick(r)} // Chama a função de clique
+                 >
+                    {/* AQUI ESTÁ A MUDANÇA: Exibe o horário */}
+                    <p className="font-bold">{r.space_name}</p>
+                    <p>{r.start_time} - {r.end_time}</p>
                  </div>
               ))}
-               {dayReservations.length > 2 && <div className="text-xs text-gray-500">...mais</div>}
             </div>
           )}
         </div>

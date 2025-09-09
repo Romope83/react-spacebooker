@@ -1,110 +1,94 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../../components/Modal.jsx';
+import { supabase } from '../../api/supabaseClient.js';
 
-// Este componente é o formulário que aparece dentro do Modal para o utilizador fazer uma reserva.
-export default function ReservationFormModal({ isOpen, onClose, onSave, space, allReservations }) { // Recebe todas as reservas
-  // Estados para controlar os campos do formulário
+// O modal agora recebe 'existingReservation' para o modo de edição
+export default function ReservationFormModal({ isOpen, onClose, onSave, space, allReservations, existingReservation }) {
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  
-  // Este `useEffect` preenche o formulário com valores padrão (o dia de amanhã)
-  // sempre que o modal é aberto. Isto facilita os testes.
+  const [loading, setLoading] = useState(false);
+
+  const isEditMode = !!existingReservation;
+
   useEffect(() => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      setDate(tomorrow.toISOString().split('T')[0]);
-      setStartTime('09:00');
-      setEndTime('10:00');
-  }, [isOpen]);
+    if (isOpen) {
+      if (isEditMode) {
+        // Se está editando, preenche o formulário com os dados existentes
+        setDate(existingReservation.date.substring(0, 10));
+        setStartTime(existingReservation.start_time);
+        setEndTime(existingReservation.end_time);
+      } else {
+        // Se está criando, usa a lógica de "amanhã"
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        setDate(tomorrow.toISOString().split('T')[0]);
+        setStartTime('09:00');
+        setEndTime('10:00');
+      }
+    }
+  }, [isOpen, isEditMode, existingReservation]);
 
-  // Função chamada quando o formulário é submetido
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Previne o recarregamento da página
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-    // --- LÓGICA DE VERIFICAÇÃO DE CONFLITO ---
-    // Verifica se já existe uma reserva que se sobrepõe ao horário solicitado.
+    // Lógica para verificar conflitos (ignorando a própria reserva no modo de edição)
     const hasConflict = allReservations.some(reservation => {
-      // Verifica se a reserva existente é para o mesmo espaço e na mesma data
-      if (reservation.space_id === space.id && reservation.date === date) {
-        // Converte os horários para facilitar a comparação
-        const existingStart = reservation.start_time;
-        const existingEnd = reservation.end_time;
-        const newStart = startTime;
-        const newEnd = endTime;
-
-        // A sobreposição ocorre se a nova reserva começa antes do fim da existente
-        // E a reserva existente começa antes do fim da nova.
-        if (newStart < existingEnd && existingStart < newEnd) {
-          return true; // Encontrou um conflito
+      // Se estiver editando, não compare a reserva com ela mesma
+      if (isEditMode && reservation.id === existingReservation.id) {
+        return false;
+      }
+      const targetSpaceId = isEditMode ? existingReservation.space_id : space.id;
+      if (reservation.space_id === targetSpaceId && reservation.date.substring(0, 10) === date) {
+        if (startTime < reservation.end_time && reservation.start_time < endTime) {
+          return true;
         }
       }
-      return false; // Nenhum conflito encontrado para esta reserva
+      return false;
     });
 
     if (hasConflict) {
-      alert('Erro: Já existe uma reserva para este espaço neste horário. Por favor, escolha outro horário.');
-      return; // Interrompe o processo de reserva
+      alert('Erro: Conflito de horário detectado. Por favor, escolha outro horário.');
+      setLoading(false);
+      return;
     }
 
-    // Se não houver conflito, chama a função onSave.
-    onSave({ date, start_time: startTime, end_time: endTime });
+    // A função onSave agora lida com a lógica de criar ou atualizar
+    try {
+      await onSave({ date, start_time: startTime, end_time: endTime });
+    } catch (error) {
+       alert(`Ocorreu um erro: ${error.message}`);
+    } finally {
+       setLoading(false);
+    }
   };
-
-  // Se não houver um espaço selecionado, não renderiza nada.
-  if (!space) {
-    return null;
-  }
+  
+  const modalTitle = isEditMode ? `Editar Reserva em: ${existingReservation.space_name}` : `Reservar o espaço: ${space?.name}`;
 
   return (
-    // Usa o componente Modal genérico para a estrutura do pop-up
-    <Modal isOpen={isOpen} onClose={onClose} title={`Reservar o espaço: ${space.name}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={modalTitle}>
       <form onSubmit={handleSubmit}>
+        {/* ... campos do formulário ... */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Data da Reserva</label>
-          <input 
-            type="date" 
-            value={date} 
-            onChange={e => setDate(e.target.value)} 
-            className="shadow appearance-none border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-500" 
-            required 
-          />
+          <label className="block text-gray-700 text-sm font-bold mb-2">Data</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3" required />
         </div>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">Hora de Início</label>
-          <input 
-            type="time" 
-            value={startTime} 
-            onChange={e => setStartTime(e.target.value)} 
-            className="shadow appearance-none border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-500" 
-            required 
-          />
+          <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3" required />
         </div>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">Hora de Fim</label>
-          <input 
-            type="time" 
-            value={endTime} 
-            onChange={e => setEndTime(e.target.value)} 
-            className="shadow appearance-none border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-500" 
-            required 
-          />
+          <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="shadow appearance-none border rounded w-full py-2 px-3" required />
         </div>
         <div className="flex justify-end gap-4 mt-6">
-          <button 
-            type="button" 
-            onClick={onClose} 
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition-colors">
-            Cancelar
-          </button>
-          <button 
-            type="submit" 
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
-            Confirmar Reserva
+          <button type="button" onClick={onClose} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">Cancelar</button>
+          <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-green-400">
+            {loading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Confirmar Reserva')}
           </button>
         </div>
       </form>
     </Modal>
   )
 };
-
