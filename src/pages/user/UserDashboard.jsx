@@ -4,7 +4,7 @@ import { supabase } from '../../api/supabaseClient.js';
 import CalendarView from '../../components/CalendarView.jsx';
 import { PageSpinner } from '../../components/Spinner.jsx';
 import ReservationFormModal from './ReservationFormModal.jsx';
-import { PencilIcon, CalendarDaysIcon } from '../../components/Icons.jsx'; // Trocar para um ícone mais adequado
+import { PencilIcon, CalendarIcon } from '../../components/Icons.jsx'; 
 
 // Você precisará adicionar este ícone em Icons.jsx
 // export function CalendarDaysIcon() { return <svg>...</svg>; }
