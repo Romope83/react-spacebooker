@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
 
-// Adicionamos a prop 'onReservationClick' para que o admin possa clicar numa reserva
 export default function CalendarView({ reservations, onReservationClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -23,13 +22,12 @@ export default function CalendarView({ reservations, onReservationClick }) {
   const renderCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    // ... (lógica de renderização dos dias)
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
 
     const days = [];
     for (let i = 0; i < firstDay.getDay(); i++) {
-      days.push(<div key={`empty-start-${i}`} className="border rounded-md p-2 h-28 bg-gray-50"></div>);
+      days.push(<div key={`empty-start-${i}`} className="border-t border-r border-slate-100 bg-slate-50"></div>);
     }
 
     for (let day = 1; day <= lastDay.getDate(); day++) {
@@ -38,18 +36,17 @@ export default function CalendarView({ reservations, onReservationClick }) {
       const hasReservations = dayReservations.length > 0;
       
       days.push(
-        <div key={day} className={`border rounded-md p-2 h-28 text-sm relative transition-colors ${hasReservations ? 'bg-blue-50' : 'bg-white'}`}>
-          <span className="font-semibold text-gray-800">{day}</span>
+        <div key={day} className="border-t border-r border-slate-100 p-2 h-32 text-sm relative transition-colors flex flex-col">
+          <span className="font-semibold text-slate-700 self-start">{day}</span>
           {hasReservations && (
-            <div className="mt-1 space-y-1 overflow-y-auto max-h-20">
+            <div className="mt-1 space-y-1 overflow-y-auto flex-grow">
               {dayReservations.map(r => (
                  <div 
                    key={r.id} 
-                   className={`bg-blue-200 text-blue-800 p-1 rounded text-xs truncate ${onReservationClick ? 'cursor-pointer hover:bg-blue-300' : ''}`} 
+                   className={`bg-indigo-100 text-indigo-800 p-1.5 rounded-md text-xs truncate ${onReservationClick ? 'cursor-pointer hover:bg-indigo-200' : ''}`} 
                    title={`${r.space_name} (${r.start_time}-${r.end_time})`}
-                   onClick={() => onReservationClick && onReservationClick(r)} // Chama a função de clique
+                   onClick={() => onReservationClick && onReservationClick(r)}
                  >
-                    {/* AQUI ESTÁ A MUDANÇA: Exibe o horário */}
                     <p className="font-bold">{r.space_name}</p>
                     <p>{r.start_time} - {r.end_time}</p>
                  </div>
@@ -63,16 +60,16 @@ export default function CalendarView({ reservations, onReservationClick }) {
   };
   
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200">
       <div className="flex justify-between items-center mb-4">
-        <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-gray-200"><ChevronLeftIcon /></button>
-        <h2 className="text-xl font-semibold capitalize">{currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}</h2>
-        <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-gray-200"><ChevronRightIcon /></button>
+        <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-slate-100 transition-colors"><ChevronLeftIcon /></button>
+        <h2 className="text-xl font-bold text-slate-800 capitalize">{currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}</h2>
+        <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-slate-100 transition-colors"><ChevronRightIcon /></button>
       </div>
-      <div className="grid grid-cols-7 gap-2 text-center text-xs text-gray-600 font-bold mb-2">
+      <div className="grid grid-cols-7 gap-px text-center text-xs text-slate-500 font-bold mb-2 uppercase tracking-wider">
         <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
       </div>
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-px border-l border-b border-slate-100">
         {renderCalendar()}
       </div>
     </div>

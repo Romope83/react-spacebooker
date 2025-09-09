@@ -8,65 +8,57 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const { login, loading } = useAuth();
 
-  // Função chamada quando o formulário é submetido
   const handleLogin = async (e) => {
     e.preventDefault();
     await login(email, password);
   };
-  
-  // A função setDemoCredentials foi removida daqui
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-xl">
-        {/* Cabeçalho */}
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+      <div className="max-w-md w-full bg-white p-10 rounded-xl shadow-lg border border-slate-200">
         <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-indigo-600">SpaceBooker</h1>
-            <p className="text-gray-500 mt-2">Gestão de Reservas para Espaços Compartilhados</p>
+            <h1 className="text-4xl font-bold tracking-tight text-indigo-600">SpaceBooker</h1>
+            <p className="text-slate-500 mt-2">Gestão de Reservas para Espaços Compartilhados</p>
         </div>
 
-        {/* Formulário de Login */}
-        <form onSubmit={handleLogin}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">Email</label>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div>
+            <label className="block text-slate-700 text-sm font-semibold mb-2" htmlFor="email">Email</label>
             <input 
               id="email" 
               type="email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+              className="appearance-none border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" 
               required 
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">Senha</label>
+          <div>
+            <label className="block text-slate-700 text-sm font-semibold mb-2" htmlFor="password">Senha</label>
             <input 
               id="password" 
               type="password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+              className="appearance-none border border-slate-300 rounded-lg w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" 
               required 
             />
           </div>
-          <div className="flex items-center justify-between">
+          <div>
             <button 
               type="submit" 
               disabled={loading} 
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline w-full flex justify-center items-center disabled:bg-indigo-400 transition-colors"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline w-full flex justify-center items-center disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? <Spinner /> : 'Entrar'}
             </button>
           </div>
         </form>
 
-        {/* O bloco de botões de demonstração foi removido daqui */}
-
-        {/* Link para a Página de Cadastro */}
-        <div className="mt-6 text-center text-sm text-gray-600 border-t pt-4">
+        <div className="mt-6 text-center text-sm text-slate-600 border-t border-slate-200 pt-6">
             <p>
                 Não tem uma conta?{' '}
-                <Link to="/signup" className="font-medium text-indigo-600 hover:underline">
+                <Link to="/signup" className="font-semibold text-indigo-600 hover:text-indigo-500 hover:underline">
                     Cadastre-se
                 </Link>
             </p>

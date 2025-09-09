@@ -15,10 +15,9 @@ export default function UserDashboard() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSpace, setSelectedSpace] = useState(null);
-  const [reservationToEdit, setReservationToEdit] = useState(null); // State para edição
+  const [reservationToEdit, setReservationToEdit] = useState(null);
 
   const fetchData = async () => {
-    // ... (função fetchData, sem alterações)
     try {
       const { data: spacesData, error: spacesError } = await supabase.from('spaces').select();
       if (spacesError) throw spacesError;
@@ -42,20 +41,19 @@ export default function UserDashboard() {
 
   const handleBookNow = (space) => {
     setSelectedSpace(space);
-    setReservationToEdit(null); // Garante que não está em modo de edição
+    setReservationToEdit(null);
     setIsModalOpen(true);
   };
   
   const handleEdit = (reservation) => {
     setReservationToEdit(reservation);
-    setSelectedSpace(null); // Garante que não está em modo de criação
+    setSelectedSpace(null);
     setIsModalOpen(true);
   }
 
   const handleSave = async (bookingDetails) => {
     try {
       if (reservationToEdit) {
-        // --- LÓGICA DE UPDATE ---
         const { error } = await supabase
           .from('reservations')
           .update(bookingDetails)
@@ -63,16 +61,15 @@ export default function UserDashboard() {
         if (error) throw error;
         alert('Reserva atualizada com sucesso!');
       } else {
-        // --- LÓGICA DE INSERT ---
         const newReservation = { ...bookingDetails, space_id: selectedSpace.id, user_id: user.id, user_email: user.email, space_name: selectedSpace.name };
         const { error } = await supabase.from('reservations').insert(newReservation);
         if (error) throw error;
         alert('Reserva criada com sucesso!');
       }
       setIsModalOpen(false);
-      fetchData(); // Recarrega os dados
+      fetchData();
     } catch (error) {
-       throw error; // Propaga o erro para o modal mostrar o alerta
+       throw error;
     }
   };
 
@@ -86,50 +83,45 @@ export default function UserDashboard() {
   if (loading) return <PageSpinner />;
   
   return (
-    <div className="p-4 md:p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Painel do Usuário</h1>
-      {/* Agora o calendário do usuário também mostra todas as reservas */}
+    <div className="space-y-8">
+      <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">Painel do Usuário</h1>
       <CalendarView reservations={allReservations} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Card de Espaços Disponíveis */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-semibold mb-4">Espaços para Reservar</h2>
-           {/* ... (código dos espaços) ... */}
-           <ul className="space-y-3">
-            {spaces.map(space => (
-              <li key={space.id} className="border p-4 rounded-lg flex justify-between items-center">
+        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+          <h2 className="text-2xl font-bold mb-4 text-slate-800">Espaços para Reservar</h2>
+           <div className="divide-y divide-slate-100">
+            {spaces.map((space, index) => (
+              <div key={space.id} className={`py-4 flex justify-between items-center ${index === 0 ? 'pt-0' : ''}`}>
                 <div>
-                  <p className="font-bold">{space.name}</p>
-                  <p className="text-sm text-gray-600">Capacidade: {space.capacity}</p>
-                  <p className="text-sm text-gray-600">Recursos: {space.resources}</p>
+                  <p className="font-bold text-slate-800">{space.name}</p>
+                  <p className="text-sm text-slate-500">Capacidade: {space.capacity}</p>
+                  <p className="text-sm text-slate-500">Recursos: {space.resources}</p>
                 </div>
-                <button onClick={() => handleBookNow(space)} className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">Reservar</button>
-              </li>
+                <button onClick={() => handleBookNow(space)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-semibold transition-colors shrink-0">Reservar</button>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
-        {/* Card de Minhas Reservas */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-semibold mb-4">Minhas Reservas</h2>
+        <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+          <h2 className="text-2xl font-bold mb-4 text-slate-800">Minhas Reservas</h2>
           {myReservations.length > 0 ? (
-            <ul className="space-y-3">
-              {myReservations.map(res => (
-                <li key={res.id} className="border p-4 rounded-lg flex justify-between items-center">
+            <div className="divide-y divide-slate-100">
+              {myReservations.map((res, index) => (
+                <div key={res.id} className={`py-4 flex justify-between items-center ${index === 0 ? 'pt-0' : ''}`}>
                   <div>
                     <p className="font-bold">{res.space_name}</p>
-                    <p className="text-sm text-gray-600">Data: {res.date.substring(0,10)} | Horário: {res.start_time} - {res.end_time}</p>
+                    <p className="text-sm text-slate-500">Data: {new Date(res.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})} | Horário: {res.start_time} - {res.end_time}</p>
                   </div>
-                  <div className="flex gap-2">
-                    {/* --- BOTÃO DE EDITAR --- */}
-                    <button onClick={() => handleEdit(res)} className="bg-yellow-500 text-white p-2 rounded-full hover:bg-yellow-600"><PencilIcon /></button>
-                    <button onClick={() => handleCancelReservation(res.id)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">Cancelar</button>
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => handleEdit(res)} title="Editar Reserva" className="bg-slate-200 text-slate-700 p-2 rounded-full hover:bg-slate-300 transition-colors"><PencilIcon /></button>
+                    <button onClick={() => handleCancelReservation(res.id)} className="bg-rose-500 text-white px-4 py-2 rounded-lg hover:bg-rose-600 text-sm font-semibold transition-colors">Cancelar</button>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
-            <p className="text-gray-500">Você ainda não fez nenhuma reserva.</p>
+            <p className="text-slate-500">Você ainda não fez nenhuma reserva.</p>
           )}
         </div>
       </div>
