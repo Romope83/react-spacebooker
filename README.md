@@ -1,4 +1,5 @@
 Spacebooker App
+
 O Spacebooker é uma aplicação web completa para agendamento e reserva de espaços, como salas de reunião ou escritórios. Construído com React e Vite no frontend, e utilizando Supabase para backend, autenticação e banco de dados. O sistema possui controle de acesso baseado em funções (usuários e administradores) para garantir a segurança e a correta gestão dos dados.
 
 ✨ Funcionalidades
