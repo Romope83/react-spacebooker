@@ -119,7 +119,8 @@ A aplicação estará disponível em http://localhost:5173 (ou outra porta indic
 O agendamento de salas em ambientes corporativos é frequentemente descentralizado e sujeito a conflitos, gerando ineficiência e perda de tempo. O Spacebooker App soluciona este desafio ao centralizar a reserva de espaços em uma plataforma web intuitiva. O sistema permite que colaboradores visualizem a disponibilidade e agendem horários, enquanto administradores gerenciam os espaços cadastrados, eliminando o risco de reservas duplicadas. O seu diferencial reside na arquitetura moderna e segura, que utiliza o Supabase para gerenciar o banco de dados e a autenticação. A implementação de políticas de segurança a nível de linha (Row Level Security) garante que os usuários só possam gerenciar suas próprias reservas, oferecendo uma camada robusta de controle de acesso.
 
 2. Banner de venda
-<img width="1200" height="628" alt="banner_spacebooker" src="https://github.com/user-attachments/assets/d5d45ca3-9eda-41e5-902a-56f850bd5b9e" />
+<img width="1024" height="1536" alt="Spacebooker_ Organização de Espaços Eficiente" src="https://github.com/user-attachments/assets/1b8fdd7d-2342-4196-96f5-93adb12874ba" />
+
 
 3. Video Explicativo
 https://youtu.be/6ls-QI_PNag
