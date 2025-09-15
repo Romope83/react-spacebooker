@@ -97,7 +97,7 @@ Instale as dependências:
 
 Bash
 
-npm install
+npm install  
 Crie um arquivo de ambiente:
 Crie um arquivo chamado .env na raiz do projeto e adicione as chaves do Supabase que você copiou:
 
@@ -110,13 +110,26 @@ Execute o projeto:
 Bash
 
 npm run dev
+
 A aplicação estará disponível em http://localhost:5173 (ou outra porta indicada no terminal).
 
-📜 Scripts Disponíveis
-npm run dev: Inicia o servidor de desenvolvimento com Vite.
 
-npm run build: Compila o projeto para produção.
 
-npm run lint: Executa o ESLint para verificar a qualidade do código.
+1. Resumo Executivo
+O agendamento de salas em ambientes corporativos é frequentemente descentralizado e sujeito a conflitos, gerando ineficiência e perda de tempo. O Spacebooker App soluciona este desafio ao centralizar a reserva de espaços em uma plataforma web intuitiva. O sistema permite que colaboradores visualizem a disponibilidade e agendem horários, enquanto administradores gerenciam os espaços cadastrados, eliminando o risco de reservas duplicadas. O seu diferencial reside na arquitetura moderna e segura, que utiliza o Supabase para gerenciar o banco de dados e a autenticação. A implementação de políticas de segurança a nível de linha (Row Level Security) garante que os usuários só possam gerenciar suas próprias reservas, oferecendo uma camada robusta de controle de acesso.
 
-npm run preview: Inicia um servidor local para visualizar a versão de produção.
+2. Banner de venda
+<img width="1200" height="628" alt="banner_spacebooker" src="https://github.com/user-attachments/assets/d5d45ca3-9eda-41e5-902a-56f850bd5b9e" />
+
+3. Video Explicativo
+https://youtu.be/6ls-QI_PNag
+
+4. Pesquisa de Mercado
+Pesquisa de Mercado – Aplicação do Spacebooker App na TQUIM
+
+A TQUIM, fundada em 1980, é uma empresa especializada no transporte de produtos químicos e petroquímicos, perigosos e não perigosos, além de armazenagem de produtos químicos e gerais. Com uma estrutura administrativa ativa, a empresa enfrenta desafios internos relacionados à organização de espaços físicos, como salas de reunião e ambientes corporativos de uso compartilhado.
+
+Recentemente, um episódio em que o gerente da empresa foi impedido de realizar uma reunião por conta de conflito de reservas gerou um ambiente desconfortável, evidenciando uma dor clara: a falta de um sistema centralizado e eficiente para o agendamento de espaços internos.
+
+O Spacebooker App atenderia diretamente essa necessidade, oferecendo uma plataforma web intuitiva para visualização e reserva de salas, evitando reservas duplicadas e conflitos de agenda. A aplicação também traz segurança por meio de autenticação robusta e controle de acesso com Row Level Security, garantindo que cada colaborador gerencie apenas suas próprias reservas. Para a TQUIM, isso se traduz em maior organização, produtividade, controle e melhoria no clima organizacional.
+
